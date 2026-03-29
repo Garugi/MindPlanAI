@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindPlan AI</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+</style>
+
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<!-- Navbar -->
+<div class="w-full bg-white border-b px-8 py-4 flex justify-between items-center shadow-sm">
+
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-indigo-600 text-white flex items-center justify-center rounded-lg font-bold">
+            M
+        </div>
+        <div>
+            <h1 class="text-md font-semibold">MindPlan AI</h1>
+            <p class="text-xs text-gray-400">Smart Productivity Assistant</p>
+        </div>
+    </div>
+
+    <div class="text-xs text-gray-500">
+        AI-powered planning
+    </div>
+
+</div>
+
+<!-- Main Layout -->
+<div class="max-w-6xl mx-auto mt-10 px-6 grid md:grid-cols-2 gap-8">
+
+    <!-- LEFT: Input -->
+    <div class="bg-white p-6 rounded-2xl border shadow-sm">
+
+        <h2 class="text-lg font-semibold mb-4">Create Your Plan</h2>
+
+        <form method="POST" id="form" class="space-y-5">
+
+            <!-- Tasks -->
+            <div>
+                <label class="text-sm text-gray-600">Tasks</label>
+                <textarea 
+                    name="tasks"
+                    rows="6"
+                    placeholder="Study DBMS - 2h"
+                    class="mt-2 w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-200 resize-none"
+                ></textarea>
+            </div>
+
+            <!-- Mood -->
+            <div>
+    <label class="text-sm text-gray-600">Mood</label>
+
+    <div class="grid grid-cols-3 gap-2 mt-2">
+
+        <button type="button" data-value="stressed"
+            class="mood border rounded-xl py-2 text-sm flex flex-col items-center">
+            😓
+            <span class="text-xs mt-1">Stressed</span>
+        </button>
+
+        <button type="button" data-value="normal"
+            class="mood border rounded-xl py-2 text-sm flex flex-col items-center">
+            🙂
+            <span class="text-xs mt-1">Normal</span>
+        </button>
+
+        <button type="button" data-value="energetic"
+            class="mood border rounded-xl py-2 text-sm flex flex-col items-center">
+            ⚡
+            <span class="text-xs mt-1">Energetic</span>
+        </button>
+
+    </div>
+
+    <input type="hidden" name="mood" id="moodInput">
+</div>
+
+            <!-- Button -->
+            <button 
+                type="submit"
+                class="w-full bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 transition">
+                ✨ Generate Smart Plan
+            </button>
+            <button 
+                type="button"
+                onclick="window.location.href='/'"
+                class="w-full border mt-2 py-3 rounded-xl text-sm font-medium hover:bg-gray-100 transition">
+                🔄 Reset Plan
+            </button>
+
+        </form>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="bg-white p-6 rounded-2xl border shadow-sm">
+
+    <h2 class="text-lg font-semibold mb-4">Your Curated Plan</h2>
+
+    {% if data %}
+
+    <!-- STATUS -->
+    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg text-sm mb-4">
+        {{ data.status }}
+    </div>
+
+    <!-- PLAN -->
+    {% if data %}
+
+<!-- Focus Block -->
+<div class="bg-gray-50 p-4 rounded-xl mb-4">
+
+    <div class="flex items-center gap-2 mb-3">
+        <div class="w-8 h-8 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded-full">
+            ⏱️
+        </div>
+        <h3 class="font-medium text-sm">Focus Block</h3>
+    </div>
+
+    <ul class="space-y-2 text-sm">
+        {% for task in data.tasks %}
+        <li class="flex items-center gap-2">
+            {% if task.status == "done" %}
+                <span class="text-green-500">●</span>
+            {% else %}
+                <span class="text-gray-400">●</span>
+            {% endif %}
+            {{ task.name }} ({{ task.time }})
+        </li>
+        {% endfor %}
+    </ul>
+
+</div>
+
+<!-- Advice -->
+<div class="bg-indigo-50 p-4 rounded-xl mb-4">
+
+    <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded-full">
+            🧘
+        </div>
+        <h3 class="font-medium text-sm">Mindful Advice</h3>
+    </div>
+
+    <ul class="text-sm text-gray-600 space-y-1">
+        {% for tip in data.advice %}
+        <li class="flex items-start gap-2">
+    <span class="text-indigo-500 mt-1">✔</span>
+    <span>{{ tip }}</span>
+</li>
+        {% endfor %}
+    </ul>
+
+</div>
+
+<!-- Message -->
+<div class="bg-white border p-3 rounded-lg text-sm">
+    {{ data.message }}
+</div>
+
+{% endif %}
+
+    <!-- CHART -->
+    <div class="flex justify-center mt-4">
+        
+        <div class="w-48 h-48">
+            <canvas id="chart"></canvas>
+        </div>
+    </div>
+
+    {% else %}
+        <p class="text-sm text-gray-400">Your generated plan will appear here.</p>
+    {% endif %}
+
+</div>
+
+</div>
+
+<script>
+    // Mood selection
+    document.querySelectorAll('.mood').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mood').forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white');
+            });
+
+            btn.classList.add('bg-indigo-600', 'text-white');
+            document.getElementById('moodInput').value = btn.dataset.value;
+        });
+    });
+
+    // Loading
+    document.getElementById('form').addEventListener('submit', () => {
+        document.getElementById('loading').classList.remove('hidden');
+    });
+
+    // Chart (SAFE WAY)
+
+</script>
+{% if data %}
+<script>
+const chartData = JSON.parse('{{ (data.chart if data and data.chart else []) | tojson | safe }}');
+
+if (chartData && chartData.length > 0) {
+    const ctx = document.getElementById('chart');
+
+    if (window.chartInstance) {
+        window.chartInstance.destroy();
+    }
+
+    const labels = chartData.map(t => t.name);
+    const values = chartData.map(t => t.time);
+
+    const colors = labels.map((_, i) => {
+        const palette = [
+            '#6366F1', '#22C55E', '#F59E0B',
+            '#EF4444', '#3B82F6', '#A855F7',
+            '#14B8A6', '#F43F5E'
+        ];
+        return palette[i % palette.length];
+    });
+
+    window.chartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors
+            }]
+        }
+    });
+}
+</script>
+{% endif %}
+</body>
+</html>
