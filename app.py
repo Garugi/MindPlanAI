@@ -5,7 +5,7 @@ import json
 from openai import OpenAI
 client = OpenAI(
     base_url="https://api.featherless.ai/v1",
-    api_key="rc_3f1478a69513f3a2fae1a485d82049756c48de79995e2461215ad2ca1984fc4e"
+    api_key="api_key"
 )
 
 app = Flask(__name__)
